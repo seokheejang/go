@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package input;
+
+option go_package = "grpc-wasd-server/proto;input";
+
+service InputService {
+  rpc SendKey (KeyRequest) returns (KeyResponse);
+}
+
+message KeyRequest {
+  string key = 1;
+}
+
+message KeyResponse {
+  string message = 1;
+}
