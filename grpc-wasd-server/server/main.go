@@ -11,25 +11,29 @@ import (
 )
 
 type server struct {
-    pb.UnimplementedInputServiceServer
+	pb.UnimplementedInputServiceServer
 }
 
 func (s *server) SendKey(ctx context.Context, req *pb.KeyRequest) (*pb.KeyResponse, error) {
-    log.Printf("Received key: %s", req.Key)
-    return &pb.KeyResponse{Message: "Key received: " + req.Key}, nil
+	log.Printf("Received key: %s", req.Key)
+	return &pb.KeyResponse{Message: "Key received: " + req.Key}, nil
 }
 
 func main() {
-    listener, err := net.Listen("tcp", ":50051")
-    if err != nil {
-        log.Fatalf("Failed to listen: %v", err)
-    }
+	// 기본 포트로 서버를 리스닝
+	listener, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
 
-    grpcServer := grpc.NewServer()
-    pb.RegisterInputServiceServer(grpcServer, &server{})
+	// gRPC 서버를 생성
+	grpcServer := grpc.NewServer()
 
-    log.Println("gRPC server is running on port 50051")
-    if err := grpcServer.Serve(listener); err != nil {
-        log.Fatalf("Failed to serve: %v", err)
-    }
+	// 서비스 등록
+	pb.RegisterInputServiceServer(grpcServer, &server{})
+
+	log.Println("gRPC server is running on port 50051")
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
 }
