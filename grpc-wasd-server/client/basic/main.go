@@ -24,10 +24,7 @@ func main() {
 	keys := []string{"w", "a", "s", "d"}
 
 	for _, key := range keys {
-		// 키 입력 요청 생성
 		req := &pb.KeyRequest{Key: key}
-
-		// 서버에 요청 보내기
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
@@ -37,7 +34,6 @@ func main() {
 			continue
 		}
 
-		// 서버 응답 출력
 		log.Printf("Server response: %s", res.Message)
 	}
 }
