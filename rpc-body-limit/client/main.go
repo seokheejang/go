@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	url := "http://localhost:7877/health"
+	url := "http://localhost:7878/health"
 
 	limit := 5 * 1024 * 1024
 	for _, N := range []int{limit - 1000, limit + 1000} {
