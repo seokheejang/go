@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"fiber-test/app/database"
 	"fiber-test/app/routes"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -9,6 +12,14 @@ import (
 )
 
 func main() {
+	// Connect to MongoDB
+	db, err := database.ConnectMongo()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to MongoDB")
+	}
+	defer db.Client().Disconnect(context.TODO())
+
+	// Create a new Fiber app
 	app := fiber.New(fiber.Config{
 		ErrorHandler: customErrorHandler,
 	})
@@ -16,7 +27,12 @@ func main() {
 
 	routes.Setup(app)
 
-	if err := app.Listen(":3000"); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
+	if err := app.Listen(":" + port); err != nil {
 		log.Fatal().Err(err).Msg("Failed to start server")
 	}
 }
