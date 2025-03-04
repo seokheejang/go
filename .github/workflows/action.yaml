@@ -1,0 +1,11 @@
+name: Github Push Event
+run-name: Push
+on: [push]
+
+jobs: 
+  Push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: echo
+        ruu: |
+          echo "Github Push"
