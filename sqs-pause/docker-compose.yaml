@@ -1,0 +1,49 @@
+# docker-compose.yml
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack-sqs-test
+    ports:
+      - '4668:4566'
+      - '4676:4576'
+    environment:
+      - SERVICES=sqs
+      - HOSTNAME_EXTERNAL=localstack
+      - LS_LOG=warn
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    networks:
+      - app-network
+
+  watcher-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: watcher-server
+    networks:
+      - app-network
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      - localstack
+    ports:
+      - "18080:8080"
+
+  handler-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: handler-client
+    networks:
+      - app-network
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      - localstack
+
+networks:
+  app-network:
+    driver: bridge
