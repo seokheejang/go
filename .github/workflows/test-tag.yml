@@ -1,0 +1,19 @@
+name: test tag trigger
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  print-tag-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print tag name and commit info
+        run: |
+          echo "Triggered by tag: ${{ github.ref }}"
+          echo "Tag name only:   ${{ github.ref_name }}"
+          echo "Commit SHA:      ${{ github.sha }}"
