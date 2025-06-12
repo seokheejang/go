@@ -31,5 +31,7 @@ If the cache is working properly, "execute" should not appear for the second que
 
 ## Key Point
 
-- DDD interface 
-- package: github.com/go-gorm/caches/v4
+- DDD interface Type & PKG Type
+- package: 
+  - github.com/go-gorm/caches/v4
+  - github.com/patrickmn/go-cache
