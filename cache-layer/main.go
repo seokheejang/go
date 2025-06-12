@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/seokheejang/go/cache-layer/internal/domains/cache"
+	"github.com/seokheejang/go/cache-layer/internal/config"
 	"github.com/seokheejang/go/cache-layer/internal/domains/user"
-	cacheGorm "github.com/seokheejang/go/cache-layer/internal/infrastructure/cache/gorm"
-	"github.com/seokheejang/go/cache-layer/internal/infrastructure/cache/memory"
-	redisCache "github.com/seokheejang/go/cache-layer/internal/infrastructure/cache/redis"
+	cachePkg "github.com/seokheejang/go/cache-layer/pkg/cache"
+	gormCache "github.com/seokheejang/go/cache-layer/pkg/cache/gorm"
+	memoryCache "github.com/seokheejang/go/cache-layer/pkg/cache/memory"
+	redisCache "github.com/seokheejang/go/cache-layer/pkg/cache/redis"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -24,7 +25,9 @@ func main() {
 		fmt.Println("Usage: go run main.go --cache=mem|redis")
 		os.Exit(1)
 	}
-	cacheType := flag.String("cache", "mem", "cache type choice (mem or redis)")
+
+	cfg := config.NewDefaultConfig()
+	cacheType := flag.String("cache", cfg.Cache.Type, "cache type choice (mem or redis)")
 	flag.Parse()
 
 	// Configure GORM logger
@@ -38,7 +41,14 @@ func main() {
 		},
 	)
 
-	dsn := "host=localhost user=postgres password=postgres dbname=postgres port=6432 sslmode=disable"
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
+		cfg.Database.Host,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.DBName,
+		cfg.Database.Port,
+		cfg.Database.SSLMode,
+	)
 	log.Printf("Connecting to PostgreSQL with DSN: %s", dsn)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -56,28 +66,42 @@ func main() {
 		log.Fatal("Failed to set search path:", err)
 	}
 
-	var cacheService cache.Service
+	var cacheService cachePkg.Cache
 	switch *cacheType {
 	case "mem":
 		log.Println("Using in-memory cache")
-		cacheService = memory.NewInMemoryCache(2*time.Second, 30*time.Second)
+
+		cacheService, err = memoryCache.New(&cachePkg.Options{
+			DefaultTTL: cfg.Cache.TTL,
+			MaxTTL:     cfg.Cache.MaxTTL,
+			MaxSize:    1000,
+		})
+		if err != nil {
+			log.Fatal("Failed to create memory cache:", err)
+		}
 	case "redis":
 		log.Println("Using Redis cache")
+
 		rdb := redis.NewClient(&redis.Options{
-			Addr:     "localhost:6379",
-			Password: "",
-			DB:       0,
+			Addr:     cfg.Redis.Addr,
+			Password: cfg.Redis.Password,
+			DB:       cfg.Redis.DB,
 		})
-		ttl := 2 * time.Second
-		cacheService = redisCache.NewRedisCache(rdb, &ttl)
+		cacheService, err = redisCache.New(rdb, &cachePkg.Options{
+			DefaultTTL: cfg.Cache.TTL,
+			MaxTTL:     cfg.Cache.MaxTTL,
+		})
+		if err != nil {
+			log.Fatal("Failed to create Redis cache:", err)
+		}
 	default:
 		log.Fatal("Invalid cache type. Use 'mem' or 'redis'")
 	}
 	defer cacheService.Close()
 
 	// Apply GORM cache plugin
-	if err := cacheGorm.WithGormCache(db, cacheService); err != nil {
-		log.Fatal(err)
+	if err := gormCache.WithGormCache(db, cacheService); err != nil {
+		log.Fatal("Failed to apply cache plugin:", err)
 	}
 
 	// Run migrations
