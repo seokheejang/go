@@ -24,7 +24,7 @@ func NewGoCacheWrapper(options *cache.Options) cache.Cache {
 func (c *goCacheWrapper) Get(_ context.Context, key string) (interface{}, error) {
 	val, found := c.cache.Get(key)
 	if !found {
-		return nil, nil
+		return nil, cache.ErrNotFound
 	}
 
 	return val, nil

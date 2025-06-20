@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/seokheejang/go/cache-layer/pkg/cache"
+	cachepkg "github.com/seokheejang/go/cache-layer/pkg/cache"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGoCacheWrapper(t *testing.T) {
 	// Set test options
-	options := &cache.Options{
+	options := &cachepkg.Options{
 		DefaultTTL: 100 * time.Millisecond,
 	}
 
@@ -38,6 +38,18 @@ func TestGoCacheWrapper(t *testing.T) {
 		assert.Equal(t, value, result)
 	})
 
+	t.Run("Get Non-existent Key Test", func(t *testing.T) {
+		// Given
+		key := "non-existent-key"
+
+		// When
+		result, err := cache.Get(ctx, key)
+
+		// Then
+		assert.ErrorIs(t, err, cachepkg.ErrNotFound)
+		assert.Nil(t, result)
+	})
+
 	t.Run("TTL Expiration Test", func(t *testing.T) {
 		// Given
 		key := "ttl-test-key"
@@ -56,9 +68,9 @@ func TestGoCacheWrapper(t *testing.T) {
 		// When - Wait for TTL expiration
 		time.Sleep(ttl + 10*time.Millisecond)
 
-		// Then - Value should be nil after TTL expiration
+		// Then - Value should return ErrNotFound after TTL expiration
 		result, err = cache.Get(ctx, key)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, cachepkg.ErrNotFound)
 		assert.Nil(t, result)
 	})
 
@@ -89,7 +101,7 @@ func TestGoCacheWrapper(t *testing.T) {
 
 		// Then - key1 should be expired, but key2 should still exist
 		result1, err = cache.Get(ctx, key1)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, cachepkg.ErrNotFound)
 		assert.Nil(t, result1)
 		result2, err = cache.Get(ctx, key2)
 		assert.NoError(t, err)
@@ -116,7 +128,7 @@ func TestGoCacheWrapper(t *testing.T) {
 
 		// Then - Value should be nil after deletion
 		result, err = cache.Get(ctx, key)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, cachepkg.ErrNotFound)
 		assert.Nil(t, result)
 	})
 
@@ -146,10 +158,10 @@ func TestGoCacheWrapper(t *testing.T) {
 
 		// Then - All values should be nil after clear
 		result1, err = cache.Get(ctx, key1)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, cachepkg.ErrNotFound)
 		assert.Nil(t, result1)
 		result2, err = cache.Get(ctx, key2)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, cachepkg.ErrNotFound)
 		assert.Nil(t, result2)
 	})
 }

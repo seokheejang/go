@@ -33,10 +33,10 @@ func New(client *redis.Client, options *cache.Options) (cache.Cache, error) {
 func (c *redisCache) Get(ctx context.Context, key string) (interface{}, error) {
 	data, err := c.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
-		return nil, nil
+		return nil, cache.ErrNotFound
 	}
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	var value interface{}

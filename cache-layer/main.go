@@ -158,7 +158,7 @@ func main() {
 	fmt.Println("\n[Test 1] First query (expected cache miss)")
 	var users1 []user.User
 	if err := db.WithContext(ctx).Find(&users1, "name = ?", "admin").Error; err != nil {
-		log.Fatal(err)
+		log.Printf("DB error: %v", err)
 	}
 	if len(users1) > 0 {
 		fmt.Printf("Result: %+v\n", users1[0])
@@ -168,7 +168,7 @@ func main() {
 	fmt.Println("\n[Test 2] Second query (expected cache hit)")
 	var users2 []user.User
 	if err := db.WithContext(ctx).Find(&users2, "name = ?", "admin").Error; err != nil {
-		log.Fatal(err)
+		log.Printf("DB error: %v", err)
 	}
 	if len(users2) > 0 {
 		fmt.Printf("Result: %+v\n", users2[0])

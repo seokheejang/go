@@ -4,7 +4,7 @@
 
 1. First, run docker-compose to start the databases:
 ```bash
-docker-compose up --build
+docker-compose up -d --build
 ```
 
 2. Then, run main.go with the appropriate argument:

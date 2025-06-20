@@ -55,9 +55,3 @@ type Cache interface {
 	// Close releases any resources used by the cache
 	Close() error
 }
-
-// Factory creates new cache instances
-type Factory interface {
-	// New creates a new cache instance with the given options
-	New(options *Options) (Cache, error)
-}

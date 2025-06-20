@@ -39,6 +39,11 @@ func (c *gormCacher) Get(ctx context.Context, key string, q *caches.Query[any]) 
 	}
 
 	value, err := c.cache.Get(ctx, key)
+
+	if err == cache.ErrNotFound {
+		return nil, nil // cache miss
+	}
+
 	if err != nil {
 		return nil, err
 	}
